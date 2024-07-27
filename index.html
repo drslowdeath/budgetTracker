@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Budget Tracker</title>
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/fontawesome.min.css"
+            integrity="sha384-BY+fdrpOd3gfeRvTSMT+VUZmA728cfF9Z2G42xpaRkUGu2i3DyzpTURDo5A6CaLK" crossorigin="anonymous">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <script src="app.js"></script>
+        <style>
+            [x-cloak] {
+                display: none !important;
+            }
+
+            .scale-on-click {
+                transition: transform 0.3s ease;
+            }
+
+            .scale-on-click:active {
+                transform: scale(0.8);
+            }
+        </style>
+    </head>
+    <body class="bg-gray-800" x-data="budgetTracker()">
+        <div class="flex justify-center">
+            <h1 class="p-4 text-4xl font-semibold text-slate-100">Budget Tracker</h1>
+        </div>
+        <hr>
+        <div x-cloak class="p-4">
+            <div class="flex justify-center">
+                <p x-text="currentDate" class="m-2 text-2xl font-semibold text-slate-100"></p>
+            </div>
+            <div class="grid grid-cols-2 p-2 justify-normal gap-5">
+                <div class="border rounded-lg border-gray-400 p-4">
+                    <div class="mt-4">
+                        <h1 class="font-semibold text-lg mb-2 text-slate-100">Monthly Budget</h1>
+                        <div class="flex text-slate-900">
+                            <input title="inputFunds" placeholder="Enter funds" type="text" x-model="inputs.user"
+                                class="border rounded-md border-gray-600 p-2 bg-slate-400 placeholder-slate-900 text-slate-900">
+                            <div class="content-center">
+                                <button @click="appendFunds()"
+                                    class="border border-gray-400 rounded-md p-2 bg-slate-300 hover:bg-slate-400 transition duration-300 ml-4">Add</button>
+                            </div>
+                        </div>
+                        <p class="text-slate-100"> Funds at start of period: £<span x-text="fundsAtStartOfPeriod"
+                                class="text-lg font-semibold text-slate-100"></span></p>
+                    </div>
+                </div>
+                <div class="border rounded-lg border-gray-400 p-4">
+                    <div class="flex justify-center">
+                        <div class="mt-4 mr-4">
+                            <h1 class="font-semibold text-lg mb-2 text-slate-100">Amount:</h1>
+                            <input x-model="inputs.expense" type="number" placeholder="Enter amount"
+                                class="border rounded-md border-gray-600 p-2 bg-slate-400 placeholder-slate-900 text-slate-900"
+                                title="expensesInput">
+                        </div>
+                        <div class="mt-4">
+                            <h1 class="font-semibold text-lg text-slate-100">Expense:</h1>
+                            <input x-model="inputs.heading" placeholder="Enter amount" type="text"
+                                class="border rounded-md border-gray-600 p-2 bg-slate-400 placeholder-slate-900 text-slate-900"
+                                title="expensesInput">
+                            <button @click="addExpense()"
+                                class="border border-gray-400 rounded-md p-2 bg-slate-300 hover:bg-slate-400 transition duration-300 mt-2 ml-4">Add</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-center m-2">
+                        <p class="text-slate-100"> Funds at start of period: £<span x-text="fundsAtStartOfPeriod"
+                                class="text-lg font-semibold text-slate-100"></span></p>
+                    </div>
+                    <div class="flex justify-center mb-4">
+                        <p class="text-lg font-semibold mt-2 text-slate-100">Available Funds: £<span
+                                x-text="availableFundsForThisMonth.toFixed(2)"></span></p>
+                    </div>
+                    <div class="flex justify-center">
+                        <h2 class="text-lg font-semibold mt-2 items-center text-slate-100">List of Expenses:</h2>
+                    </div>
+                    <div class="mt-2">
+                        <template x-for="(headEx, index) in headingExpense" :key="index">
+                            <div class="flex space-x-4">
+                                <p class="text-slate-100 text-xl underline font-semibold">£<span x-text="headEx"
+                                        class="underline text-slate-100 text-xl"></span></p>
+                                <div class="flex items-center">
+                                    <svg @click="removeExpense(index)" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                        class="w-6 h-6 text-red-500 hover:text-red-700 transition-all duration-300 cursor-pointer scale-on-click">
+                                        <path stroke-linecap=" round" stroke-linejoin="round"
+                                            d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </template>
+                    </div>                
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button
+                    @click="populateBudgetTracker();"
+                    class="border text-slate-200 border-gray-400 rounded-md p-2 m-2 bg-red-400 hover:bg-red-500 hover:text-slate-200 transition duration-300">
+                    Archive Month
+                </button>
+            </div>
+            <hr>
+            <h1 class="text-4xl font-semibold text-slate-100 mt-4 mb-4">Budget Tracker</h1>
+            <hr>
+            <button @click="toggleOpen = !toggleOpen;"
+                class="border border-gray-400 rounded-md p-2 bg-slate-400 hover:bg-slate-500 transition duration-300 mt-4 text-slate-900">
+                Open Archive
+            </button>
+
+            <div x-show="toggleOpen;" class="w-full h-full border rounded-md border-slate-400 p-4 mt-4">
+                <h1 class="text-slate-100 font-bold text-xl">Budget tracker maaan</h1>
+
+                <template x-for="(date, index) in budgetTracker.dateArr" :key="index">
+                    <div class="border-slate-400 p-2">
+                        <div class="flex justify-between">
+                            <button @click="toggleOpenArchive[index] = !toggleOpenArchive[index]" 
+                                x-text="date" 
+                                class="text-white border rounded-md border-gray-400 p-1">
+                            </button>
+                            <button @click="removeBudgetItem(index)"
+                                class="text-red-500 hover:text-red-700 transition duration-300 border border-red-700 rounded-md p-2">
+                                Delete
+                            </button>
+                        </div>
+                        <div x-show="toggleOpenArchive[index]" class="border rounded-md border-slate-400 mt-2 p-2">
+                            <div>
+                                <div class="text-white font-semibold underline">
+                                    Initial Funds:
+                                </div>
+                                <div class="text-white flex">£<p x-text="budgetTracker.startFundsArr[index]" class="text-white"></p></div>
+                            </div>
+                            <div>
+                                <div class="text-white font-semibold underline">
+                                    End Funds:
+                                </div>
+                                <div class="text-white flex">£<p x-text="budgetTracker.endFundsArr[index]"></p></div>
+                            </div>
+                            <div>
+                                <p class="text-white font-semibold underline">Expenses: 
+                                    <div x-text="budgetTracker.expensesArr[index]" class="text-white"></div>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </body>
+    </html>
